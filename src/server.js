@@ -104,6 +104,10 @@ app.post('/users', (req, res) => {
   res.status(201).json({ message: 'User created', user: req.body });
 });
 
+app.get('/users', (req, res) => {
+  res.status(200).json({ message: users });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
