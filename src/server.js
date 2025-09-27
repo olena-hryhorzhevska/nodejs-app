@@ -91,6 +91,8 @@ app.use(
   }),
 );
 
+const users = [];
+
 // Маршрут
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello, World!' });
@@ -98,7 +100,8 @@ app.get('/', (req, res) => {
 
 app.post('/users', (req, res) => {
   console.log(req.body); // тепер тіло доступне як JS-об’єкт
-  res.status(201).json({ message: 'User created' });
+  users.push(req.body);
+  res.status(201).json({ message: 'User created', user: req.body });
 });
 
 app.listen(PORT, () => {
