@@ -1,12 +1,41 @@
 // src/server.js
 import express from 'express';
 import cors from 'cors';
-import pino from 'pino-http';
 // Такий імпорт одразу ініціалізує бібліотеку
 import 'dotenv/config';
+import { connectMongoDB } from './db/connectMongoDB.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { logger } from './middleware/logger.js';
+import studentsRoutes from './routes/studentsRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
+
+app.use(logger); // Логування часу запиту
+// ❗️Middleware для парсингу JSON
+app.use(
+  express.json({
+    type: ['application/json', 'application/vnd.api+json'],
+    limit: '100kb', // максимум 100 кілобайт
+  }),
+);
+app.use(cors()); // Дозволяє запити з будь-яких джерел
+app.use(studentsRoutes);
+// Middleware 404 (після всіх маршрутів)
+app.use(notFoundHandler);
+// Middleware для обробки помилок
+app.use(errorHandler);
+
+await connectMongoDB();
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+
+
+
 
 // //❗️ Перший маршрут
 // app.get('/', (req, res) => {
@@ -71,43 +100,20 @@ const PORT = process.env.PORT ?? 3000;
 //   console.log(`Server is running on port ${PORT}`);
 // });
 
-// ❗️Middleware для парсингу JSON
-app.use(express.json());
-app.use(cors()); // Дозволяє запити з будь-яких джерел
-app.use(
-  pino({
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-        messageFormat:
-          '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
-        hideObject: true,
-      },
-    },
-  }),
-);
 
-const users = [];
+// const users = [];
 
-// Маршрут
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Hello, World!' });
-});
+// // Маршрут
+// app.get('/', (req, res) => {
+//   res.status(200).json({ message: 'Hello, World!' });
+// });
 
-app.post('/users', (req, res) => {
-  console.log(req.body); // тепер тіло доступне як JS-об’єкт
-  users.push(req.body);
-  res.status(201).json({ message: 'User created', user: req.body });
-});
+// app.post('/users', (req, res) => {
+//   console.log(req.body); // тепер тіло доступне як JS-об’єкт
+//   users.push(req.body);
+//   res.status(201).json({ message: 'User created', user: req.body });
+// });
 
-app.get('/users', (req, res) => {
-  res.status(200).json({ message: users });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// app.get('/users', (req, res) => {
+//   res.status(200).json({ message: users });
+// });
