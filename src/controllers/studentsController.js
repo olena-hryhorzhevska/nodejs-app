@@ -4,8 +4,40 @@ import { Student } from '../models/student.js';
 import createHttpError from 'http-errors';
 
 export const getStudents = async (req, res) => {
-  const students = await Student.find();
-  res.status(200).json(students);
+  // Отримуємо пара метри пагінації
+  const { page = 1, perPage = 10, gender, minAvgMark, search } = req.query;
+  const skip = (page - 1) * perPage;
+  // Створюємо базовий запит до колекції
+  const studentsQuery = Student.find();
+
+  if (search) {
+    studentsQuery.where({
+      $text: { $search: search },
+    });
+  }
+
+  if (gender) {
+    studentsQuery.where('gender').equals(gender);
+  }
+  if (minAvgMark) {
+    studentsQuery.where('avgMark').gte(minAvgMark);
+  }
+
+  // Виконуємо одразу два запити паралельно
+  const [totalItems, students] = await Promise.all([
+    studentsQuery.clone().countDocuments(),
+    studentsQuery.skip(skip).limit(perPage),
+  ]);
+
+  // Обчислюємо загальну кількість «сторінок»
+  const totalPages = Math.ceil(totalItems / perPage);
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    students,
+  });
 };
 
 export const getStudentById = async (req, res, next) => {
