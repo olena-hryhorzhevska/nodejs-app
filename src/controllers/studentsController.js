@@ -5,7 +5,15 @@ import createHttpError from 'http-errors';
 
 export const getStudents = async (req, res) => {
   // Отримуємо пара метри пагінації
-  const { page = 1, perPage = 10, gender, minAvgMark, search } = req.query;
+  const {
+    page = 1,
+    perPage = 10,
+    gender,
+    minAvgMark,
+    search,
+    sortBy = '_id',
+    sortOrder = 'asc',
+  } = req.query;
   const skip = (page - 1) * perPage;
   // Створюємо базовий запит до колекції
   const studentsQuery = Student.find();
@@ -13,6 +21,7 @@ export const getStudents = async (req, res) => {
   if (search) {
     studentsQuery.where({
       $text: { $search: search },
+      // name: { $regex: search, $options: 'i' },
     });
   }
 
@@ -26,7 +35,12 @@ export const getStudents = async (req, res) => {
   // Виконуємо одразу два запити паралельно
   const [totalItems, students] = await Promise.all([
     studentsQuery.clone().countDocuments(),
-    studentsQuery.skip(skip).limit(perPage),
+    studentsQuery
+      .skip(skip)
+      .limit(perPage)
+      .sort({
+        [sortBy]: sortOrder,
+      }),
   ]);
 
   // Обчислюємо загальну кількість «сторінок»
