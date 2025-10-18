@@ -9,6 +9,8 @@ import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { logger } from './middleware/logger.js';
 import studentsRoutes from './routes/studentsRoutes.js';
 import { errors } from 'celebrate';
+import authRoutes from './routes/authRoutes.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -22,6 +24,8 @@ app.use(
   }),
 );
 app.use(cors()); // Дозволяє запити з будь-яких джерел
+app.use(cookieParser());
+app.use(authRoutes);
 app.use(studentsRoutes);
 // Middleware 404 (після всіх маршрутів)
 app.use(notFoundHandler);

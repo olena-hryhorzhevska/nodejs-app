@@ -15,9 +15,11 @@ import {
   updateStudentSchema,
 } from '../validations/studentsValidation.js';
 import { celebrate } from 'celebrate';
+import { authenticate } from '../middleware/authenticate.js';
 
 const router = Router();
 
+router.use('/students', authenticate);
 router.get('/students', celebrate(getStudentsSchema), getStudents);
 router.get(
   '/students/:studentId',
@@ -30,6 +32,10 @@ router.delete(
   celebrate(studentIdParamSchema),
   deleteStudent,
 );
-router.patch('/students/:studentId', celebrate(updateStudentSchema), updateStudent);
+router.patch(
+  '/students/:studentId',
+  celebrate(updateStudentSchema),
+  updateStudent,
+);
 
 export default router;
